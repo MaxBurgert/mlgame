@@ -1,6 +1,6 @@
 import gym
 import random
-
+from gym import spaces
 
 # Example state
 # - - - - - - - - -
@@ -69,6 +69,7 @@ class BlockWorldEnv(gym.Env):
         self.state = StateSpace(8, 8)
         self.reward = 0
         self.add = [0, 0]
+        self.action_space = spaces.Discrete(4)
 
     def step(self, action):
         if self.done == 1:
@@ -124,8 +125,3 @@ class BlockWorldEnv(gym.Env):
                     print('-', end=' ')
             print("")
         print("")
-
-
-bw = BlockWorldEnv()
-bw.render()
-bw.step(1)
