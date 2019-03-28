@@ -1,17 +1,17 @@
 import gym
 import random
-from gym import error, spaces, distutils
-from gym.utils import seeding
 
 
 # Example state
-############
-# -x-------#
-# ---------#
-# -----o---#
-# ---------#
-# ---------#
-############
+# - - - - - - - - -
+# - o - - - - - - -
+# - - - - - - - - -
+# - - - - - - - - -
+# - - - - - - # - -
+# - - x - - - - - -
+# - - - - - - - - -
+# - - - - - - - - -
+# - - - - - - - - -
 
 class StateSpace:
 
@@ -51,13 +51,14 @@ class StateSpace:
         :return:
         """
         if action == 0:
-            return self.pos_agent[0]-1, self.pos_agent[1]
+            return self.pos_agent[0] - 1, self.pos_agent[1]
         elif action == 1:
-            return self.pos_agent[0], self.pos_agent[1]+1
+            return self.pos_agent[0], self.pos_agent[1] + 1
         elif action == 2:
-            return self.pos_agent[0]+1, self.pos_agent[1]
+            return self.pos_agent[0] + 1, self.pos_agent[1]
         elif action == 3:
-            return self.pos_agent[0]-1, self.pos_agent[1]-1
+            return self.pos_agent[0] - 1, self.pos_agent[1] - 1
+
 
 class BlockWorldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -121,8 +122,10 @@ class BlockWorldEnv(gym.Env):
                     print('#', end=' ')
                 else:
                     print('-', end=' ')
-            print(" ")
+            print("")
+        print("")
 
 
 bw = BlockWorldEnv()
 bw.render()
+bw.step(1)
