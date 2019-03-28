@@ -1,0 +1,1 @@
+from gym_block_world.envs.block_world_env import BlockWorldEnv

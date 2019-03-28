@@ -1,18 +1,20 @@
+import gym
+from gym import error, spaces, distutils
+from gym.utils import seeding
 import pygame
-import tensorflow as tf
 
 pygame.init()
-screen = pygame.display.set_mode((500,500))
+screen = pygame.display.set_mode((88,80))
 done = False
 
-x = 30
-y = 30
-rect_size = 30
-move_distance = 2
-position_goal_x = 400
-position_goal_y = 400
-position_obstacle_x = 250
-position_obstacle_y = 250
+x = 2
+y = 2
+rect_size = 2
+move_distance = 1
+position_goal_x = 30
+position_goal_y = 30
+position_obstacle_x = 15
+position_obstacle_y = 10
 
 clock = pygame.time.Clock()
 
@@ -43,3 +45,18 @@ while not done:
 
     pygame.display.flip()
     clock.tick(60)
+
+class BlockWorldEnv(gym.Env):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self):
+        ...
+
+    def step(self, action):
+        ...
+
+    def reset(self):
+        ...
+
+    def render(self, mode='human', close=False):
+        ...
