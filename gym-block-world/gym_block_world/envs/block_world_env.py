@@ -57,7 +57,7 @@ class StateSpace:
         elif action == 2:
             return self.pos_agent[0] + 1, self.pos_agent[1]
         elif action == 3:
-            return self.pos_agent[0] - 1, self.pos_agent[1] - 1
+            return self.pos_agent[0], self.pos_agent[1] - 1
 
 
 class BlockWorldEnv(gym.Env):
@@ -83,7 +83,7 @@ class BlockWorldEnv(gym.Env):
             else:
                 self.state.pos_agent = new_state
                 self.counter += 1
-                if self.counter > 16:
+                if self.counter >= 16:
                     self.done = 1
                 self.render()
 
