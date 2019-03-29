@@ -12,8 +12,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 env = gym.make('block_world-v0')
 env.reset()
 
-goal_steps = 30
-score_requirement = 100
+goal_steps = 40
+score_requirement = 0
 initial_games = 10000
 
 
@@ -71,7 +71,7 @@ def train_model(training_data):
     y = np.array([i[1] for i in training_data]).reshape(-1, len(training_data[0][1]))
     model = build_model(input_size=len(X[0]), output_size=len(y[0]))
 
-    model.fit(X, y, epochs=100)
+    model.fit(X, y, epochs=1000)
     return model
 
 

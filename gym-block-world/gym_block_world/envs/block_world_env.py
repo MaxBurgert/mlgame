@@ -1,5 +1,6 @@
-import gym
 import random
+
+import gym
 from gym import spaces
 
 
@@ -29,7 +30,8 @@ class BlockWorldEnv(gym.Env):
         self.pos_obstacle = self.calc_pos_obstacle()
         # [shape,agent_pos,obstacle_pos,goal_pos]
         self.state = [self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
-                      self.pos_obstacle[0], self.pos_obstacle[1]]
+                      self.pos_obstacle[0], self.pos_obstacle[1], self.pos_obstacle[2], self.pos_obstacle[3],
+                      self.pos_obstacle[4], self.pos_obstacle[5]]
         self.reward = 0
         self.add = [0, 0]
         self.action_space = spaces.Discrete(4)
@@ -39,19 +41,40 @@ class BlockWorldEnv(gym.Env):
 
     def calc_pos_goal(self):
         pos_x, pos_y = self._calc_pos()
-        while (pos_x, pos_y) == self.pos_agent:
+        while abs(pos_x - self.pos_agent[0]) <= 1 and abs(pos_y - self.pos_agent[1]) <= 1:
             pos_x, pos_y = self._calc_pos()
         return pos_x, pos_y
 
     def calc_pos_obstacle(self):
-        pos_x, pos_y = self._calc_pos()
-        while (pos_x, pos_y) == self.pos_agent or (pos_x, pos_y) == self.pos_goal:
-            pos_x, pos_y = self._calc_pos()
-        return pos_x, pos_y
+        """
+             #       #
+            #x#     #x
+                     #
+            open_pos -> only feasible action for agent
+        :return:
+        """
+        open_pos = random.randint(0, 3)
+        if open_pos == 0:
+            pos_x_1, pos_y_1 = self.pos_agent[0] + 1, self.pos_agent[1]
+            pos_x_2, pos_y_2 = self.pos_agent[0], self.pos_agent[1] + 1
+            pos_x_3, pos_y_3 = self.pos_agent[0] - 1, self.pos_agent[1]
+        elif open_pos == 1:
+            pos_x_1, pos_y_1 = self.pos_agent[0], self.pos_agent[1] + 1
+            pos_x_2, pos_y_2 = self.pos_agent[0] - 1, self.pos_agent[1]
+            pos_x_3, pos_y_3 = self.pos_agent[0], self.pos_agent[1] - 1
+        elif open_pos == 2:
+            pos_x_1, pos_y_1 = self.pos_agent[0] - 1, self.pos_agent[1]
+            pos_x_2, pos_y_2 = self.pos_agent[0], self.pos_agent[1] - 1
+            pos_x_3, pos_y_3 = self.pos_agent[0] + 1, self.pos_agent[1]
+        elif open_pos == 3:
+            pos_x_1, pos_y_1 = self.pos_agent[0], self.pos_agent[1] - 1
+            pos_x_2, pos_y_2 = self.pos_agent[0] + 1, self.pos_agent[1]
+            pos_x_3, pos_y_3 = self.pos_agent[0], self.pos_agent[1] + 1
+        return pos_x_1, pos_y_1, pos_x_2, pos_y_2, pos_x_3, pos_y_3
 
     def _calc_pos(self):
-        pos_x = random.randint(0, (self.width - 1))
-        pos_y = random.randint(0, (self.height - 1))
+        pos_x = random.randint(1, (self.width - 2))  # agent should not spawn on edges
+        pos_y = random.randint(1, (self.height - 2))
         return pos_x, pos_y
 
     def _apply_action(self, action):
@@ -88,14 +111,16 @@ class BlockWorldEnv(gym.Env):
                 self.counter += 1
                 self.reward = -1
 
-            if self.counter == 30:
+            if self.counter == 40:
                 self.done = 1
-                # self.render()
+
+            # self.render()
 
         win = None
         if self.state[0] == self.state[2] and self.state[1] == self.state[3]:
             win = 1
-        elif self.state[0] == self.state[4] and self.state[1] == self.state[5]:
+        if (new_state[0], new_state[1]) == (new_state[4], new_state[5]) or (new_state[0], new_state[1]) == (
+                new_state[6], new_state[7]) or (new_state[0], new_state[1]) == (new_state[8], new_state[9]):
             win = -1
 
         if win:
@@ -116,7 +141,8 @@ class BlockWorldEnv(gym.Env):
         self.pos_obstacle = self.calc_pos_obstacle()
         # [shape,agent_pos,goal_pos,obstacle_pos]
         self.state = [self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
-                      self.pos_obstacle[0], self.pos_obstacle[1]]
+                      self.pos_obstacle[0], self.pos_obstacle[1], self.pos_obstacle[2], self.pos_obstacle[3],
+                      self.pos_obstacle[4], self.pos_obstacle[5]]
         self.reward = 0
         self.add = [0, 0]
         return self.state
@@ -129,6 +155,10 @@ class BlockWorldEnv(gym.Env):
                 elif self.state[2] == j and self.state[3] == i:
                     print('o', end=' ')
                 elif self.state[4] == j and self.state[5] == i:
+                    print('#', end=' ')
+                elif self.state[6] == j and self.state[7] == i:
+                    print('#', end=' ')
+                elif self.state[8] == j and self.state[9] == i:
                     print('#', end=' ')
                 else:
                     print('-', end=' ')
