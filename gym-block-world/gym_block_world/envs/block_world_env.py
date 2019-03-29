@@ -4,6 +4,7 @@ from gym import spaces
 
 
 # Example state
+# (0,0) is topleft corner
 # - - - - - - - - -
 # - o - - - - - - -
 # - - - - - - - - -
@@ -27,7 +28,8 @@ class BlockWorldEnv(gym.Env):
         self.pos_goal = self.calc_pos_goal()
         self.pos_obstacle = self.calc_pos_obstacle()
         # [shape,agent_pos,obstacle_pos,goal_pos]
-        self.state = [(self.width, self.height), self.pos_agent, self.pos_goal, self.pos_obstacle]
+        self.state = [self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
+                      self.pos_obstacle[0], self.pos_obstacle[1]]
         self.reward = 0
         self.add = [0, 0]
         self.action_space = spaces.Discrete(4)
@@ -62,13 +64,13 @@ class BlockWorldEnv(gym.Env):
         """
         state_copy = self.state.copy()
         if action == 0:
-            state_copy[1] = (state_copy[1][0] - 1), state_copy[1][1]
+            state_copy[1] = state_copy[1] - 1
         elif action == 1:
-            state_copy[1] = state_copy[1][0], (state_copy[1][1] + 1)
+            state_copy[0] = state_copy[0] + 1
         elif action == 2:
-            state_copy[1] = (state_copy[1][0] + 1), state_copy[1][1]
+            state_copy[1] = state_copy[1] + 1
         elif action == 3:
-            state_copy[1] = state_copy[1][0], (state_copy[1][1] - 1)
+            state_copy[0] = state_copy[0] - 1
         return state_copy
 
     def step(self, action):
@@ -77,20 +79,21 @@ class BlockWorldEnv(gym.Env):
             return [self.state, self.reward, self.done, self.add]
         else:
             new_state = self._apply_action(action)
-            if new_state[1][0] < 0 or new_state[1][0] > 8 or new_state[1][0] < 0 or new_state[1][0] > 8:
+            if new_state[0] < 0 or new_state[0] > 8 or new_state[1] < 0 or new_state[1] > 8:
                 print("Invalid Step")
+                self.done = 1
                 return [self.state, self.reward, self.done, self.add]
             else:
                 self.state = new_state
                 self.counter += 1
-                if self.counter >= 16:
+                if self.counter == 16:
                     self.done = 1
                 # self.render()
 
         win = 0
-        if self.state[1] == self.state[2]:
+        if self.state[0] == self.state[2] and self.state[1] == self.state[3]:
             win = 1
-        elif self.state[1] == self.state[3]:
+        elif self.state[0] == self.state[4] and self.state[1] == self.state[5]:
             win = -1
 
         if win:
@@ -111,7 +114,8 @@ class BlockWorldEnv(gym.Env):
         self.pos_goal = self.calc_pos_goal()
         self.pos_obstacle = self.calc_pos_obstacle()
         # [shape,agent_pos,goal_pos,obstacle_pos]
-        self.state = [(self.width, self.height), self.pos_agent, self.pos_goal, self.pos_obstacle]
+        self.state = [self.width, self.height, self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
+                      self.pos_obstacle[0], self.pos_obstacle[1]]
         self.reward = 0
         self.add = [0, 0]
         return self.state
@@ -119,11 +123,11 @@ class BlockWorldEnv(gym.Env):
     def render(self, mode='human', close=False):
         for i in range(8 + 1):
             for j in range(8 + 1):
-                if self.state[1] == (i, j):
+                if self.state[0] == i and self.state[1] == j:
                     print('x', end=' ')
-                elif self.state[2] == (i, j):
+                elif self.state[2] == i and self.state[3] == j:
                     print('o', end=' ')
-                elif self.state[3] == (i, j):
+                elif self.state[4] == i and self.state[5] == j:
                     print('#', end=' ')
                 else:
                     print('-', end=' ')
