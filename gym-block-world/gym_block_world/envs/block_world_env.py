@@ -22,8 +22,8 @@ class BlockWorldEnv(gym.Env):
     def __init__(self):
         self.done = 0
         self.counter = 0
-        self.width = 8
-        self.height = 8
+        self.width = 9
+        self.height = 9
         self.pos_agent = self.calc_pos_agent()
         self.pos_goal = self.calc_pos_goal()
         self.pos_obstacle = self.calc_pos_obstacle()
@@ -50,8 +50,8 @@ class BlockWorldEnv(gym.Env):
         return pos_x, pos_y
 
     def _calc_pos(self):
-        pos_x = random.randint(0, self.width)
-        pos_y = random.randint(0, self.height)
+        pos_x = random.randint(0, (self.width - 1))
+        pos_y = random.randint(0, (self.height - 1))
         return pos_x, pos_y
 
     def _apply_action(self, action):
@@ -79,18 +79,20 @@ class BlockWorldEnv(gym.Env):
             return [self.state, self.reward, self.done, self.add]
         else:
             new_state = self._apply_action(action)
-            if new_state[0] < 0 or new_state[0] > 8 or new_state[1] < 0 or new_state[1] > 8:
-                print("Invalid Step")
-                self.done = 1
+            if new_state[0] < 0 or new_state[0] >= self.width or new_state[1] < 0 or new_state[1] >= self.height:
+                self.reward -= 10
+                self.counter += 1
                 return [self.state, self.reward, self.done, self.add]
             else:
                 self.state = new_state
                 self.counter += 1
-                if self.counter == 16:
-                    self.done = 1
+                self.reward -= 1
+
+            if self.counter == 30:
+                self.done = 1
                 # self.render()
 
-        win = 0
+        win = None
         if self.state[0] == self.state[2] and self.state[1] == self.state[3]:
             win = 1
         elif self.state[0] == self.state[4] and self.state[1] == self.state[5]:
@@ -101,9 +103,10 @@ class BlockWorldEnv(gym.Env):
             self.add[win - 1] = 1
             if win == 1:
                 print("Win")
-                self.reward = 100
+                self.reward += 200
             else:
-                self.reward = -100
+                print("Loss")
+                self.reward -= 100
 
         return [self.state, self.reward, self.done, self.add]
 
@@ -114,20 +117,20 @@ class BlockWorldEnv(gym.Env):
         self.pos_goal = self.calc_pos_goal()
         self.pos_obstacle = self.calc_pos_obstacle()
         # [shape,agent_pos,goal_pos,obstacle_pos]
-        self.state = [self.width, self.height, self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
+        self.state = [self.pos_agent[0], self.pos_agent[1], self.pos_goal[0], self.pos_goal[1],
                       self.pos_obstacle[0], self.pos_obstacle[1]]
         self.reward = 0
         self.add = [0, 0]
         return self.state
 
     def render(self, mode='human', close=False):
-        for i in range(8 + 1):
-            for j in range(8 + 1):
-                if self.state[0] == i and self.state[1] == j:
+        for i in range(self.height):
+            for j in range(self.width):
+                if self.state[0] == j and self.state[1] == i:
                     print('x', end=' ')
-                elif self.state[2] == i and self.state[3] == j:
+                elif self.state[2] == j and self.state[3] == i:
                     print('o', end=' ')
-                elif self.state[4] == i and self.state[5] == j:
+                elif self.state[4] == j and self.state[5] == i:
                     print('#', end=' ')
                 else:
                     print('-', end=' ')

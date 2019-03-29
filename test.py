@@ -5,13 +5,15 @@ from keras import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 import numpy as np
-import itertools
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 env = gym.make('block_world-v0')
 env.reset()
 
-goal_steps = 500
-score_requirement = 100
+goal_steps = 30
+score_requirement = 0
 initial_games = 10000
 
 
@@ -37,15 +39,21 @@ def model_data_preparation():
         if score >= score_requirement:
             accepted_scores.append(score)
             for data in game_memory:
-                if data[1] == 1:
-                    output = [0, 1]
-                    training_data.append([data[0], output])
+                if data[1] == 0:
+                    output = [1, 0, 0, 0]
+                elif data[1] == 1:
+                    output = [0, 1, 0, 0]
+                elif data[1] == 2:
+                    output = [0, 0, 1, 0]
+                elif data[1] == 3:
+                    output = [0, 0, 0, 1]
+                training_data.append([data[0], output])
 
         env.reset()
 
     print(accepted_scores)
-    training_data.sort()
-    return list(training_data for training_data, _ in itertools.groupby(training_data))
+    print('Average Score:', sum(accepted_scores) / len(accepted_scores))
+    return training_data
 
 
 def build_model(input_size, output_size):
@@ -63,7 +71,7 @@ def train_model(training_data):
     y = np.array([i[1] for i in training_data]).reshape(-1, len(training_data[0][1]))
     model = build_model(input_size=len(X[0]), output_size=len(y[0]))
 
-    model.fit(X, y, epochs=10)
+    model.fit(X, y, epochs=100)
     return model
 
 
@@ -85,7 +93,7 @@ for each_game in range(100):
 
         choices.append(action)
         new_observation, reward, done, info = env.step(action)
-        prev_obs = new_observation
+        prev_obs = np.asarray(new_observation)
         score += reward
         if done:
             break
@@ -95,4 +103,7 @@ for each_game in range(100):
 
 print(scores)
 print('Average Score:', sum(scores) / len(scores))
-print('choice 1:{}  choice 0:{}'.format(choices.count(1) / len(choices), choices.count(0) / len(choices)))
+print('choice 0:{}  choice 1:{} choice 2:{} choice 3:{}'.format(choices.count(0) / len(choices),
+                                                                choices.count(1) / len(choices),
+                                                                choices.count(2) / len(choices),
+                                                                choices.count(3) / len(choices)))
