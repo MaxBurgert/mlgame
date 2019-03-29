@@ -5,7 +5,7 @@ import numpy as np
 import gym_block_world
 import matplotlib.pyplot as plt
 from keras import Sequential
-from keras.layers import Dense, Dropout, Activation
+from keras.layers import Dense, Dropout, Activation, Conv1D, Conv2D
 from keras.optimizers import Adam
 from tensorflow.contrib.learn.python.learn.estimators._sklearn import train_test_split
 
@@ -16,7 +16,7 @@ env.reset()
 
 goal_steps = 40
 score_requirement = 0
-initial_games = 20000
+initial_games = 100000
 
 
 def model_data_preparation():
@@ -60,15 +60,19 @@ def model_data_preparation():
 
 def build_model(input_size, output_size):
     model = Sequential()
-    model.add(Dense(128, input_dim=input_size, activation='relu'))
+    model.add(Dense(5, input_dim=input_size, activation='relu'))
     model.add(Dropout(0.25, noise_shape=None, seed=None))
-    model.add(Dense(52, activation='relu'))
-    model.add(Dense(52, activation='relu'))
-    model.add(Dense(52, activation='relu'))
-    model.add(Dense(52, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(40, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(5, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(40, activation='relu'))
+    model.add(Dense(10, activation='relu'))
     model.add(Dropout(0.2, noise_shape=None, seed=None))
     model.add(Dense(output_size, activation='softmax'))
     model.compile(loss='mse', optimizer=Adam(), metrics=['accuracy'])
+    model.summary()
 
     return model
 
@@ -77,6 +81,7 @@ def train_model(training_data):
     X = np.array([i[0] for i in training_data]).reshape(-1, len(training_data[0][0]))
     y = np.array([i[1] for i in training_data]).reshape(-1, len(training_data[0][1]))
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    print("Shapes: X_train {},  X_test {}".format(X_train.shape, X_test.shape))
     model = build_model(input_size=len(X[0]), output_size=len(y[0]))
 
     history = model.fit(X_train, y_train, batch_size=512, epochs=200, verbose=0, validation_data=(X_test, y_test),
