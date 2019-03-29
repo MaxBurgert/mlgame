@@ -1,11 +1,13 @@
+import os
 import random
 import gym
-import gym_block_world
-from keras import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
 import numpy as np
-import os
+import gym_block_world
+import matplotlib.pyplot as plt
+from keras import Sequential
+from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import Adam
+from tensorflow.contrib.learn.python.learn.estimators._sklearn import train_test_split
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -14,7 +16,7 @@ env.reset()
 
 goal_steps = 40
 score_requirement = 0
-initial_games = 10000
+initial_games = 20000
 
 
 def model_data_preparation():
@@ -59,9 +61,14 @@ def model_data_preparation():
 def build_model(input_size, output_size):
     model = Sequential()
     model.add(Dense(128, input_dim=input_size, activation='relu'))
+    model.add(Dropout(0.25, noise_shape=None, seed=None))
     model.add(Dense(52, activation='relu'))
-    model.add(Dense(output_size, activation='linear'))
-    model.compile(loss='mse', optimizer=Adam())
+    model.add(Dense(52, activation='relu'))
+    model.add(Dense(52, activation='relu'))
+    model.add(Dense(52, activation='relu'))
+    model.add(Dropout(0.2, noise_shape=None, seed=None))
+    model.add(Dense(output_size, activation='softmax'))
+    model.compile(loss='mse', optimizer=Adam(), metrics=['accuracy'])
 
     return model
 
@@ -69,74 +76,34 @@ def build_model(input_size, output_size):
 def train_model(training_data):
     X = np.array([i[0] for i in training_data]).reshape(-1, len(training_data[0][0]))
     y = np.array([i[1] for i in training_data]).reshape(-1, len(training_data[0][1]))
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     model = build_model(input_size=len(X[0]), output_size=len(y[0]))
 
-    model.fit(X, y, epochs=1000, verbose=0)
-    return model
+    history = model.fit(X_train, y_train, batch_size=512, epochs=200, verbose=0, validation_data=(X_test, y_test),
+                        shuffle=True)
+    return model, history
 
 
-def apply_trained_model():
-    scores = []
-    choices = []
-    for each_game in range(100):
-        score = 0
-        prev_obs = []
-        for step_index in range(goal_steps):
-            # Uncomment below line if you want to see how our bot is playing the game.
-            # env.render()
-            if len(prev_obs) == 0:
-                action = random.randrange(0, 4)
-            else:
-                action = np.argmax(trained_model.predict(prev_obs.reshape(-1, len(prev_obs)))[0])
+def visualize():
+    # Plot training & validation accuracy values
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
 
-            choices.append(action)
-            new_observation, reward, done, info = env.step(action)
-            prev_obs = np.asarray(new_observation)
-            score += reward
-            if done:
-                break
-
-        env.reset()
-        scores.append(score)
-
-    print(scores)
-    print('Average Score:', sum(scores) / len(scores))
-    print('choice 0:{}  choice 1:{} choice 2:{} choice 3:{}'.format(choices.count(0) / len(choices),
-                                                                    choices.count(1) / len(choices),
-                                                                    choices.count(2) / len(choices),
-                                                                    choices.count(3) / len(choices)))
-
-
-def apply_random_model():
-    # For comparison
-    scores = []
-    choices = []
-    for each_game in range(100):
-        score = 0
-        prev_obs = []
-        for step_index in range(goal_steps):
-            # Uncomment below line if you want to see how our bot is playing the game.
-            # env.render()
-            action = random.randrange(0, 4)
-            choices.append(action)
-            new_observation, reward, done, info = env.step(action)
-            prev_obs = np.asarray(new_observation)
-            score += reward
-            if done:
-                break
-
-        env.reset()
-        scores.append(score)
-
-    print(scores)
-    print('Average Score:', sum(scores) / len(scores))
-    print('choice 0:{}  choice 1:{} choice 2:{} choice 3:{}'.format(choices.count(0) / len(choices),
-                                                                    choices.count(1) / len(choices),
-                                                                    choices.count(2) / len(choices),
-                                                                    choices.count(3) / len(choices)))
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper right')
+    plt.show()
 
 
 training_data = model_data_preparation()
-trained_model = train_model(training_data)
-apply_trained_model()
-apply_random_model()
+trained_model, history = train_model(training_data)
+visualize()
