@@ -13,7 +13,7 @@ env = gym.make('block_world-v0')
 env.reset()
 
 goal_steps = 30
-score_requirement = 0
+score_requirement = 100
 initial_games = 10000
 
 
@@ -91,6 +91,33 @@ for each_game in range(100):
         else:
             action = np.argmax(trained_model.predict(prev_obs.reshape(-1, len(prev_obs)))[0])
 
+        choices.append(action)
+        new_observation, reward, done, info = env.step(action)
+        prev_obs = np.asarray(new_observation)
+        score += reward
+        if done:
+            break
+
+    env.reset()
+    scores.append(score)
+
+print(scores)
+print('Average Score:', sum(scores) / len(scores))
+print('choice 0:{}  choice 1:{} choice 2:{} choice 3:{}'.format(choices.count(0) / len(choices),
+                                                                choices.count(1) / len(choices),
+                                                                choices.count(2) / len(choices),
+                                                                choices.count(3) / len(choices)))
+
+# For comparison
+scores = []
+choices = []
+for each_game in range(100):
+    score = 0
+    prev_obs = []
+    for step_index in range(goal_steps):
+        # Uncomment below line if you want to see how our bot is playing the game.
+        # env.render()
+        action = random.randrange(0, 4)
         choices.append(action)
         new_observation, reward, done, info = env.step(action)
         prev_obs = np.asarray(new_observation)
