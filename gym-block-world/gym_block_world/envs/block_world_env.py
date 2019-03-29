@@ -4,7 +4,7 @@ from gym import spaces
 
 
 # Example state
-# (0,0) is topleft corner
+# (0,0) is top left corner
 # - - - - - - - - -
 # - o - - - - - - -
 # - - - - - - - - -
@@ -80,13 +80,13 @@ class BlockWorldEnv(gym.Env):
         else:
             new_state = self._apply_action(action)
             if new_state[0] < 0 or new_state[0] >= self.width or new_state[1] < 0 or new_state[1] >= self.height:
-                self.reward -= 10
+                self.reward = -10
                 self.counter += 1
                 return [self.state, self.reward, self.done, self.add]
             else:
                 self.state = new_state
                 self.counter += 1
-                self.reward -= 1
+                self.reward = -1
 
             if self.counter == 30:
                 self.done = 1
@@ -102,11 +102,9 @@ class BlockWorldEnv(gym.Env):
             self.done = 1
             self.add[win - 1] = 1
             if win == 1:
-                print("Win")
-                self.reward += 200
+                self.reward = 200
             else:
-                print("Loss")
-                self.reward -= 100
+                self.reward = -100
 
         return [self.state, self.reward, self.done, self.add]
 
