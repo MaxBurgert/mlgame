@@ -1,4 +1,4 @@
-protobuf==3.4.0
+protobuf==3.18.3
 tensorflow==1.15.4
 matplotlib
 numpy
